@@ -1,0 +1,5 @@
+[default]
+python_version = "3.11"
+search_path = ["."]
+disable-search-path-heuristics = true
+project_excludes = ["venv/**"]

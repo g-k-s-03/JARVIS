@@ -1,16 +1,17 @@
 import pyttsx3
 
-# Initialize engine globally to prevent "run loop already started" errors
+# Initialised once at module level to avoid "run loop already started" resource leaks
 engine = pyttsx3.init()
-# You can adjust rate (speed) and volume here
-engine.setProperty('rate', 175) 
+engine.setProperty('rate', 175)
 
-def speak(text):
+
+def speak(text: str) -> None:
     try:
         engine.say(text)
         engine.runAndWait()
-    except RuntimeError:
-        pass
+    except Exception as e:
+        print(f"[TTS WARNING]: Could not speak response: {e}")
+
 
 if __name__ == "__main__":
     speak("Systems online. I am JARVIS, your cybersecurity assistant.")

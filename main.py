@@ -2,57 +2,67 @@ import src.ears as ears
 import src.brain as brain
 import src.voice as voice
 import time
-import os
 import re
 
+
 def print_banner():
-    os.system('cls' if os.name == 'nt' else 'clear')
     print("="*60)
     print("   JARVIS: ADVANCED CYBERSECURITY ASSISTANT (V2.5)   ")
     print("   Status: ACTIVE | OSINT & Network Recon Mode       ")
     print("="*60)
 
+
+def _safe_speak(text: str) -> None:
+    try:
+        voice.speak(text)
+    except Exception as e:
+        print(f"[TTS WARNING]: {e}")
+
+
 def run_jarvis():
     print_banner()
-    voice.speak("All systems nominal. JARVIS is online and monitoring for threats.")
-    
-    try:
-        while True:
-            # 1. Listen for a command
-            user_input = ears.listen()
-            
-            if user_input:
-                # Standard Exit Commands
-                if any(word in user_input.lower() for word in ["exit", "stop", "shutdown"]):
-                    voice.speak("Shutting down security protocols. Goodbye.")
-                    break
-                
-                print(f"\n[USER]: {user_input}")
-                
-                # Visual feedback for long scans
-                if "scan" in user_input.lower():
-                    print("[JARVIS]: Initializing deep scan. This may take a moment...")
-                else:
-                    print("[JARVIS]: Analyzing command...")
-                
-                # 2. Process with the Brain (Now with Regex & Targeting)
-                response = brain.ask_jarvis(user_input)
-                
-                # 3. Output the result to Terminal
-                print(f"\n[JARVIS]: {response}\n")
-                
-                # 4. Clean up response for Voice
-                # Removes Markdown stars and extra symbols for natural speech
-                clean_speech = re.sub(r'[*#_]', '', response) 
-                voice.speak(clean_speech)
-            
-            time.sleep(0.5)
+    _safe_speak("All systems nominal. JARVIS is online and monitoring for threats.")
 
-    except KeyboardInterrupt:
-        print("\n\n[!] Emergency Deactivation Triggered. Systems Offline.")
-    except Exception as e:
-        print(f"\n[ERROR]: Critical system failure: {e}")
-        voice.speak("Sir, a system error has occurred in the core processing loop.")
+    while True:
+        time.sleep(0.3)  # iteration rate guard
+
+        try:
+            user_input = ears.listen()
+
+            if user_input is None:
+                continue
+
+            if any(word in user_input.lower() for word in ["exit", "stop", "shutdown"]):
+                _safe_speak("Shutting down security protocols. Goodbye.")
+                break
+
+            print(f"\n[USER]: {user_input}")
+
+            if "scan" in user_input.lower():
+                print("[JARVIS]: Initializing deep scan. This may take a moment...")
+            else:
+                print("[JARVIS]: Analyzing command...")
+
+            response = brain.ask_jarvis(user_input)
+
+            print(f"\n[JARVIS]: {response}\n")
+
+            # Strip markdown/formatting so pyttsx3 doesn't read symbols aloud
+            clean_speech = re.sub(r'[`*#_]', '', response)
+            clean_speech = re.sub(r'(?m)^[-*]\s+', '', clean_speech)
+            clean_speech = re.sub(r'(?m)^\d+\.\s+', '', clean_speech)
+            clean_speech = re.sub(r'(?m)^>\s+', '', clean_speech)
+            _safe_speak(clean_speech)
+
+        except KeyboardInterrupt:
+            raise
+        except Exception as e:
+            print(f"\n[ERROR]: {e}")
+            _safe_speak("Sir, I encountered an error. Standing by for your next command.")
+
 
 if __name__ == "__main__":
-    run_jarvis()
+    try:
+        run_jarvis()
+    except KeyboardInterrupt:
+        print("\n\n[!] Emergency Deactivation Triggered. Systems Offline.")
